@@ -7,7 +7,9 @@ TestResults/
 *.suo
 logs/
 artifacts/
+.codex-artifacts/
+outputs/**/*.png
+outputs/**/*.inspect.ndjson
 *.db
 *.db-shm
 *.db-wal
-

@@ -14,7 +14,7 @@ public sealed class SiemensPlcOptions
     public SiemensPlcPointMap Points { get; init; } = new();
 }
 
-/// <summary>地址为 PoC 占位，必须在 PLC 点表冻结后由自动化工程师确认。</summary>
+/// <summary>定义 DB100/DB101 V1 通信点表；现场下载前仍需在 TIA Portal 中核对实际偏移。</summary>
 public sealed class SiemensPlcPointMap
 {
     public string AutoMode { get; init; } = "DB101.DBX0.0";
@@ -25,15 +25,15 @@ public sealed class SiemensPlcPointMap
     public string EStop { get; init; } = "DB101.DBX0.5";
     public string SafetyDoor { get; init; } = "DB101.DBX0.6";
     public string MaterialReady { get; init; } = "DB101.DBX0.7";
-    public string CycleTime { get; init; } = "DB101.DBD2";
-    public string Speed { get; init; } = "DB101.DBD6";
+    public string CycleTime { get; init; } = "DB101.DBD4";
+    public string Speed { get; init; } = "DB101.DBD8";
     public string Start { get; init; } = "DB100.DBX0.0";
     public string Stop { get; init; } = "DB100.DBX0.1";
     public string Reset { get; init; } = "DB100.DBX0.2";
     public string Auto { get; init; } = "DB100.DBX0.3";
     public string Manual { get; init; } = "DB100.DBX0.4";
     public string RecipeChange { get; init; } = "DB100.DBX0.5";
-    public string RecipeId { get; init; } = "DB100.DBD2";
+    public string RecipeId { get; init; } = "DB100.DBD4";
 }
 
 /// <summary>在建立真实 PLC 连接前验证连接参数和点位映射。</summary>

@@ -1,0 +1,60 @@
+// 高速六面视觉检测设备——PC/PLC 通信数据块 V1。
+// 重要：通信采用绝对地址，两个数据块必须关闭“优化的块访问”，并在编译后核对实际偏移。
+
+DATA_BLOCK "DB100_HMI"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+   VAR
+      Cmd_Start : Bool := FALSE;                 // 启动请求脉冲。
+      Cmd_Stop : Bool := FALSE;                  // 停止请求脉冲，不等同于急停。
+      Cmd_Reset : Bool := FALSE;                 // 故障复位请求脉冲。
+      Cmd_Auto : Bool := FALSE;                  // 自动模式请求脉冲。
+      Cmd_Manual : Bool := FALSE;                // 手动模式请求脉冲。
+      Cmd_RecipeChange : Bool := FALSE;          // 配方切换请求脉冲。
+      Reserved_CommandBit6 : Bool := FALSE;      // 保留位，禁止复用。
+      Reserved_CommandBit7 : Bool := FALSE;      // 保留位，禁止复用。
+      Reserved_Byte1 : Byte := 0;                // 固定下一字段偏移。
+      Reserved_Word2 : Word := 0;                // 保证四字节字段从偏移 4 开始。
+      RecipeId : DInt := 0;                      // 请求切换的配方编号。
+      CommandSequence : DInt := 0;               // 命令流水号，供后续握手使用。
+      PcHeartbeat : DInt := 0;                   // 上位机心跳递增计数。
+      ProtocolVersion : UInt := 1;               // 协议主版本号。
+      PcReady : Bool := FALSE;                   // 上位机业务服务就绪。
+   END_VAR
+BEGIN
+END_DATA_BLOCK
+
+DATA_BLOCK "DB101_Machine"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+   VAR
+      AutoMode : Bool := FALSE;                  // 自动模式状态。
+      ManualMode : Bool := FALSE;                // 手动模式状态。
+      Running : Bool := FALSE;                   // 自动循环运行状态。
+      Ready : Bool := FALSE;                     // 允许启动状态。
+      Fault : Bool := FALSE;                     // 设备故障汇总。
+      EStop : Bool := FALSE;                     // 急停状态镜像，不参与安全控制。
+      SafetyDoor : Bool := FALSE;                // 安全门状态镜像，不参与安全控制。
+      MaterialReady : Bool := FALSE;              // 入口物料就绪。
+      Reserved_Byte1 : Byte := 0;                // 固定下一字段偏移。
+      Reserved_Word2 : Word := 0;                // 保证四字节字段从偏移 4 开始。
+      CycleTime : Real := 0.0;                   // 最近生产节拍，单位 ms。
+      Speed : Real := 0.0;                       // 输送线实际速度，单位 mm/s。
+      CommandAckSequence : DInt := 0;            // PLC 已处理的命令流水号。
+      ActiveRecipeId : DInt := 0;                // 当前生效配方编号。
+      AlarmCode : DInt := 0;                     // 当前最高优先级报警代码。
+      PlcHeartbeat : DInt := 0;                  // PLC 心跳递增计数。
+      ProtocolVersion : UInt := 1;               // PLC 侧协议主版本号。
+      CommandBusy : Bool := FALSE;               // 命令处理中。
+      CommandError : Bool := FALSE;              // 最近一次命令失败。
+      Reserved_StatusBit2 : Bool := FALSE;       // 保留位，禁止复用。
+      Reserved_StatusBit3 : Bool := FALSE;       // 保留位，禁止复用。
+      Reserved_StatusBit4 : Bool := FALSE;       // 保留位，禁止复用。
+      Reserved_StatusBit5 : Bool := FALSE;       // 保留位，禁止复用。
+      Reserved_StatusBit6 : Bool := FALSE;       // 保留位，禁止复用。
+      Reserved_StatusBit7 : Bool := FALSE;       // 保留位，禁止复用。
+      Reserved_Byte31 : Byte := 0;               // 固定结果码偏移。
+      LastCommandStatus : Int := 0;               // 最近一次命令结果，0 表示成功。
+   END_VAR
+BEGIN
+END_DATA_BLOCK
