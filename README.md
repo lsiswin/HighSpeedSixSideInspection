@@ -19,6 +19,9 @@ dotnet test .\IndustrialInspection.sln --no-build
 阶段一测试说明见 [docs/phase-1-plc-poc.md](docs/phase-1-plc-poc.md)。
 
 当前系统完成度见 [docs/STATUS.md](docs/STATUS.md)，每次开发的步骤和修改记录保存在 [docs/execution-reports](docs/execution-reports)。
+项目严格按照 [01→18 开发路线图](docs/ROADMAP.md) 推进。
+
+所有 C# 方法必须添加中文 XML 注释，关键并发、资源、安全和故障恢复代码必须提供中文解释；可运行 `scripts/Test-ChineseMethodComments.ps1` 做本地检查。
 
 ## 设备抽象
 

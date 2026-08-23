@@ -25,5 +25,5 @@ public enum MachineCommand
     RecipeChange
 }
 
+/// <summary>描述需要写入 PLC 的设备命令及可选配方编号。</summary>
 public sealed record PlcCommandRequest(MachineCommand Command, int? RecipeId = null);
-

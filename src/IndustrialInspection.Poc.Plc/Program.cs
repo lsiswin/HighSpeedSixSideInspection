@@ -38,6 +38,9 @@ await polling.RunAsync(cancellation.Token);
 Console.WriteLine($"PLC PoC 结束：{polling.Health}");
 return polling.Health.FailedReads == 0 ? 0 : 2;
 
+/// <summary>从命令行读取 PoC 持续时间，缺少或格式错误时返回空值。</summary>
+/// <param name="arguments">传入 PoC 程序的命令行参数。</param>
+/// <returns>解析成功的持续时间，否则为 null。</returns>
 static TimeSpan? ParseDuration(string[] arguments)
 {
     var index = Array.FindIndex(arguments, value => value.Equals("--duration", StringComparison.OrdinalIgnoreCase));
@@ -45,4 +48,3 @@ static TimeSpan? ParseDuration(string[] arguments)
         ? value
         : null;
 }
-

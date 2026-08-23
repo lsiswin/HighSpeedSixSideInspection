@@ -6,6 +6,7 @@ namespace IndustrialInspection.Device.Tests;
 
 public sealed class PlcPollingLoopTests
 {
+    /// <summary>验证轮询循环能够发布状态并累计成功读取统计。</summary>
     [Fact]
     public async Task Polling_loop_publishes_status()
     {
@@ -19,6 +20,7 @@ public sealed class PlcPollingLoopTests
         Assert.NotNull(loop.Health.LastSuccessfulRead);
     }
 
+    /// <summary>验证发生瞬时读取失败后，轮询循环能够断开并重新连接。</summary>
     [Fact]
     public async Task Polling_loop_recovers_after_transient_read_failure()
     {

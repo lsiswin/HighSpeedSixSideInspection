@@ -5,6 +5,7 @@ namespace IndustrialInspection.Device.Tests;
 
 public sealed class DeviceAbstractionTests
 {
+    /// <summary>验证相机帧能够保持 ProductId、FrameId 和像素长度关联。</summary>
     [Fact]
     public async Task Camera_preserves_product_id_and_frame_id()
     {
@@ -24,6 +25,7 @@ public sealed class DeviceAbstractionTests
         Assert.Equal(16, frame.Data.Length);
     }
 
+    /// <summary>验证运动轴在绝对定位前必须完成使能和回零。</summary>
     [Fact]
     public async Task Motion_axis_requires_enable_and_home_before_absolute_move()
     {
@@ -41,6 +43,7 @@ public sealed class DeviceAbstractionTests
         Assert.Equal(100, await motion.ReadPositionAsync(axis, CancellationToken.None));
     }
 
+    /// <summary>验证机器人启动前必须满足远程模式、伺服和程序互锁。</summary>
     [Fact]
     public async Task Robot_requires_remote_mode_servo_and_program_before_start()
     {
@@ -57,4 +60,3 @@ public sealed class DeviceAbstractionTests
         Assert.Equal(RobotRunState.Running, (await robot.ReadStatusAsync(CancellationToken.None)).RunState);
     }
 }
-

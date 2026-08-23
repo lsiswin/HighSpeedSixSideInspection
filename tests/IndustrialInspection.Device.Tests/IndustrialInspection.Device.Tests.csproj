@@ -5,10 +5,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/IndustrialInspection.Device/IndustrialInspection.Device.csproj" />
+    <ProjectReference Include="../../src/IndustrialInspection.Device.Plc.Siemens/IndustrialInspection.Device.Plc.Siemens.csproj" />
     <ProjectReference Include="../../src/IndustrialInspection.Device.Simulator/IndustrialInspection.Device.Simulator.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
   </ItemGroup>
 </Project>
-

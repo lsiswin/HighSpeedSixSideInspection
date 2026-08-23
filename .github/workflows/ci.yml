@@ -1,0 +1,33 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: 检查中文方法注释
+        shell: pwsh
+        run: .\scripts\Test-ChineseMethodComments.ps1
+
+      - name: 还原依赖
+        run: dotnet restore .\IndustrialInspection.sln
+
+      - name: 编译
+        run: dotnet build .\IndustrialInspection.sln --no-restore --configuration Release
+
+      - name: 测试
+        run: dotnet test .\IndustrialInspection.sln --no-build --configuration Release
+

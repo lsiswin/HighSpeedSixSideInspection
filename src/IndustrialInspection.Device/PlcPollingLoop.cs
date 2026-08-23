@@ -21,6 +21,8 @@ public sealed class PlcPollingLoop(IPlcDriver driver, TimeSpan pollInterval, Tim
         Interlocked.Read(ref _reconnects),
         _lastError);
 
+    /// <summary>持续轮询 PLC，并在异常后执行断开、等待和重连流程。</summary>
+    /// <param name="cancellationToken">停止整个轮询循环的令牌。</param>
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         using var timer = new PeriodicTimer(pollInterval);
@@ -28,6 +30,7 @@ public sealed class PlcPollingLoop(IPlcDriver driver, TimeSpan pollInterval, Tim
         {
             try
             {
+                // 连接恢复只恢复通讯，不会自动发送启动命令或恢复生产状态。
                 if (driver.State != DeviceConnectionState.Connected)
                 {
                     await driver.ConnectAsync(cancellationToken);
@@ -62,6 +65,7 @@ public sealed class PlcPollingLoop(IPlcDriver driver, TimeSpan pollInterval, Tim
         }
     }
 
+    /// <summary>尽最大努力断开故障会话，清理失败不阻断后续重连。</summary>
     private async Task SafeDisconnectAsync()
     {
         try
