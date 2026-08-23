@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../IndustrialInspection.Domain/IndustrialInspection.Domain.csproj" />
+  </ItemGroup>
+</Project>
+

@@ -1,0 +1,27 @@
+name: 阶段任务
+description: 高速六面视觉检测设备的阶段性交付任务
+title: "[Phase 1] "
+labels: ["phase-1", "poc"]
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: 目标
+      description: 描述可验证的技术目标。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: 使用可量化指标，包含异常恢复要求。
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: 安全边界
+      description: 说明 PLC、运动控制器、安全回路和上位机的责任边界。
+    validations:
+      required: true
+
