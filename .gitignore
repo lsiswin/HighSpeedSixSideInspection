@@ -13,3 +13,4 @@ outputs/**/*.inspect.ndjson
 *.db
 *.db-shm
 *.db-wal
+!plc/tia-v18/*.db

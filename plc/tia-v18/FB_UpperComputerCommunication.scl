@@ -1,0 +1,159 @@
+// 高速六面视觉检测设备——上位机通信协议处理块 V1。
+// 本块只生成经过协议校验的命令请求，不直接驱动任何执行机构或绕过 PLC 安全互锁。
+
+FUNCTION_BLOCK "FB_UpperComputerCommunication"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT
+      CommandDone : Bool;
+      CommandStatus : Int;
+   END_VAR
+
+   VAR_OUTPUT
+      PcConnected : Bool;
+      ProtocolMatched : Bool;
+      CommandValid : Bool := FALSE;
+      CommandCode : USInt := 0;
+      CommandRecipeId : DInt := 0;
+      CommandSequence : DInt := 0;
+   END_VAR
+
+   VAR
+      StartTrigger : R_TRIG;
+      StopTrigger : R_TRIG;
+      ResetTrigger : R_TRIG;
+      AutoTrigger : R_TRIG;
+      ManualTrigger : R_TRIG;
+      RecipeTrigger : R_TRIG;
+      PlcHeartbeatTimer : IEC_TIMER;
+      PcHeartbeatWatchdog : IEC_TIMER;
+      LastPcHeartbeat : DInt;
+      PcHeartbeatSeen : Bool;
+      PendingCommandValid : Bool;
+      PendingCommandCode : USInt;
+      PendingCommandRecipeId : DInt;
+      PendingCommandSequence : DInt;
+   END_VAR
+
+   VAR_TEMP
+      PcHeartbeatChanged : Bool;
+      HasCommandEdge : Bool;
+      ShouldAbortCommand : Bool;
+      ShouldCompleteCommand : Bool;
+      RecipeChangeSucceeded : Bool;
+      ShouldAcceptCommand : Bool;
+      IsNewCommandSequence : Bool;
+   END_VAR
+
+BEGIN
+   // PLC 协议版本由程序固定写入，防止在线修改或未初始化值造成错误握手。
+   "DB101_Machine".ProtocolVersion := 1;
+   #ProtocolMatched := ("DB100_HMI".ProtocolVersion = 1) AND
+      ("DB101_Machine".ProtocolVersion = 1);
+
+   // PLC 心跳每秒递增一次，达到 DInt 上限后回绕到 0。
+   #PlcHeartbeatTimer.TON(IN := NOT #PlcHeartbeatTimer.Q, PT := T#1s);
+   IF #PlcHeartbeatTimer.Q THEN
+      IF "DB101_Machine".PlcHeartbeat >= 2147483647 THEN
+         "DB101_Machine".PlcHeartbeat := 0;
+      ELSE
+         "DB101_Machine".PlcHeartbeat := "DB101_Machine".PlcHeartbeat + 1;
+      END_IF;
+   END_IF;
+
+   // PC 心跳变化会复位看门狗；只有收到过心跳变化后才允许判定通信健康。
+   #PcHeartbeatChanged := "DB100_HMI".PcHeartbeat <> #LastPcHeartbeat;
+   IF #PcHeartbeatChanged THEN
+      #LastPcHeartbeat := "DB100_HMI".PcHeartbeat;
+      #PcHeartbeatSeen := TRUE;
+   END_IF;
+   #PcHeartbeatWatchdog.TON(
+      IN := "DB100_HMI".PcReady AND #ProtocolMatched AND #PcHeartbeatSeen AND NOT #PcHeartbeatChanged,
+      PT := T#5s);
+   #PcConnected := "DB100_HMI".PcReady AND
+      #ProtocolMatched AND
+      #PcHeartbeatSeen AND
+      NOT #PcHeartbeatWatchdog.Q;
+
+   // 所有命令使用上升沿，避免上位机脉冲保持期间被 PLC 重复处理。
+   #StartTrigger(CLK := "DB100_HMI".Cmd_Start);
+   #StopTrigger(CLK := "DB100_HMI".Cmd_Stop);
+   #ResetTrigger(CLK := "DB100_HMI".Cmd_Reset);
+   #AutoTrigger(CLK := "DB100_HMI".Cmd_Auto);
+   #ManualTrigger(CLK := "DB100_HMI".Cmd_Manual);
+   #RecipeTrigger(CLK := "DB100_HMI".Cmd_RecipeChange);
+   #HasCommandEdge := #StartTrigger.Q
+      OR #StopTrigger.Q
+      OR #ResetTrigger.Q
+      OR #AutoTrigger.Q
+      OR #ManualTrigger.Q
+      OR #RecipeTrigger.Q;
+
+   // 为简化编译诊断并保持状态判断一致，先计算状态条件，再执行单一布尔判断。
+   #ShouldAbortCommand := #PendingCommandValid AND NOT #PcConnected;
+   #ShouldCompleteCommand := #PendingCommandValid AND #PcConnected AND #CommandDone;
+   #RecipeChangeSucceeded := (#CommandStatus = 0) AND (#PendingCommandCode = 6);
+   #ShouldAcceptCommand := NOT #PendingCommandValid AND #HasCommandEdge AND #PcConnected;
+   #IsNewCommandSequence := ("DB100_HMI".CommandSequence > 0) AND
+      ("DB100_HMI".CommandSequence <> "DB101_Machine".CommandAckSequence);
+
+   IF #ShouldAbortCommand THEN
+      // 先处理上一扫描周期已经受理但因上位机离线而失败的命令，禁止 Busy 状态悬挂。
+      "DB101_Machine".CommandAckSequence := #PendingCommandSequence;
+      "DB101_Machine".CommandBusy := FALSE;
+      "DB101_Machine".CommandError := TRUE;
+      "DB101_Machine".LastCommandStatus := 1001;
+      #PendingCommandValid := FALSE;
+   END_IF;
+
+   IF #ShouldCompleteCommand THEN
+      // 只有下游机器逻辑明确完成后才确认流水号，避免提前返回成功。
+      "DB101_Machine".CommandAckSequence := #PendingCommandSequence;
+      "DB101_Machine".CommandBusy := FALSE;
+      "DB101_Machine".CommandError := #CommandStatus <> 0;
+      "DB101_Machine".LastCommandStatus := #CommandStatus;
+
+      IF #RecipeChangeSucceeded THEN
+         "DB101_Machine".ActiveRecipeId := #PendingCommandRecipeId;
+      END_IF;
+
+      #PendingCommandValid := FALSE;
+   END_IF;
+
+   IF #ShouldAcceptCommand THEN
+      IF #IsNewCommandSequence THEN
+         // 同一时刻只允许一条未完成命令；停止和复位具有更高选择优先级。
+         #PendingCommandSequence := "DB100_HMI".CommandSequence;
+         #PendingCommandRecipeId := "DB100_HMI".RecipeId;
+         "DB101_Machine".CommandBusy := TRUE;
+         "DB101_Machine".CommandError := FALSE;
+         "DB101_Machine".LastCommandStatus := 0;
+
+         // 先给出最低优先级默认值，再按优先级从低到高覆盖。
+         #PendingCommandCode := 6;
+         IF #ManualTrigger.Q THEN
+            #PendingCommandCode := 5;
+         END_IF;
+         IF #AutoTrigger.Q THEN
+            #PendingCommandCode := 4;
+         END_IF;
+         IF #StartTrigger.Q THEN
+            #PendingCommandCode := 1;
+         END_IF;
+         IF #ResetTrigger.Q THEN
+            #PendingCommandCode := 3;
+         END_IF;
+         IF #StopTrigger.Q THEN
+            #PendingCommandCode := 2;
+         END_IF;
+
+         #PendingCommandValid := TRUE;
+      END_IF;
+   END_IF;
+
+   // 每个扫描周期都从已初始化的静态状态刷新输出，消除首次扫描的不确定值。
+   #CommandValid := #PendingCommandValid;
+   #CommandCode := #PendingCommandCode;
+   #CommandRecipeId := #PendingCommandRecipeId;
+   #CommandSequence := #PendingCommandSequence;
+END_FUNCTION_BLOCK

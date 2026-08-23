@@ -14,7 +14,7 @@
 
 - [PLC-POINT-LIST-V1.csv](PLC-POINT-LIST-V1.csv)：评审、核对和变更留档用点表。
 - [PLC-POINT-LIST-V1.xlsx](../../outputs/2026-08-23-tia-v18-point-list-v1/PLC-POINT-LIST-V1.xlsx)：带筛选、冻结表头、状态颜色和使用说明的现场交付表。
-- [CommunicationDbV1.scl](../../plc/tia-v18/CommunicationDbV1.scl)：TIA V18 外部源参考，可生成两个全局 DB。
+- [CommunicationDbV1.db](../../plc/tia-v18/CommunicationDbV1.db)：TIA V18 DB 外部源参考，可生成两个全局 DB。
 - C# 默认地址已同步为本点表 V1。
 
 ## 2. 先创建设备
@@ -29,7 +29,7 @@
 
 推荐使用 SCL 外部源，减少人工录入错误：
 
-1. 在“外部源”下添加新的 SCL 外部源，并导入 `CommunicationDbV1.scl`。
+1. 在“外部源”下添加 DB 外部源，并导入 `CommunicationDbV1.db`。
 2. 从外部源生成块。
 3. 检查生成的块名称分别为 `DB100_HMI`、`DB101_Machine`。
 4. 如果 TIA 自动分配了其他编号，在块属性中把编号手动改为 `100` 和 `101`。

@@ -25,7 +25,7 @@
 
 - 新增 `docs/plc/PLC-POINT-LIST-V1.csv`。
 - 新增 `docs/plc/TIA-V18-POINT-LIST-GUIDE.md`。
-- 新增 `plc/tia-v18/CommunicationDbV1.scl`。
+- 新增 `plc/tia-v18/CommunicationDbV1.db`。
 - 新增 `outputs/2026-08-23-tia-v18-point-list-v1/PLC-POINT-LIST-V1.xlsx`。
 - `RecipeId` 从 `DB100.DBD2` 调整为 `DB100.DBD4`。
 - `CycleTime` 从 `DB101.DBD2` 调整为 `DB101.DBD4`。

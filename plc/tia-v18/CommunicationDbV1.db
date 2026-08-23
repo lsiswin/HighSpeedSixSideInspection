@@ -1,9 +1,10 @@
-// 高速六面视觉检测设备——PC/PLC 通信数据块 V1。
+// 高速六面视觉检测设备——PC/PLC 通信数据块 V1（DB 外部源）。
 // 重要：通信采用绝对地址，两个数据块必须关闭“优化的块访问”，并在编译后核对实际偏移。
 
 DATA_BLOCK "DB100_HMI"
 { S7_Optimized_Access := 'FALSE' }
 VERSION : 0.1
+NON_RETAIN
    VAR
       Cmd_Start : Bool := FALSE;                 // 启动请求脉冲。
       Cmd_Stop : Bool := FALSE;                  // 停止请求脉冲，不等同于急停。
@@ -27,6 +28,7 @@ END_DATA_BLOCK
 DATA_BLOCK "DB101_Machine"
 { S7_Optimized_Access := 'FALSE' }
 VERSION : 0.1
+NON_RETAIN
    VAR
       AutoMode : Bool := FALSE;                  // 自动模式状态。
       ManualMode : Bool := FALSE;                // 手动模式状态。

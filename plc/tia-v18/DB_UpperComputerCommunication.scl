@@ -1,0 +1,9 @@
+// 高速六面视觉检测设备——上位机通信功能块的专用实例数据块。
+// 实例数据只保存通信状态，不包含任何绕过安全互锁的执行机构控制位。
+
+DATA_BLOCK "DB_UpperComputerCommunication"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_UpperComputerCommunication"
+BEGIN
+END_DATA_BLOCK

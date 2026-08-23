@@ -1,0 +1,12 @@
+// 高速六面视觉检测设备——PLC 主循环 OB1。
+// 当前阶段只调用上位机通信块；设备动作完成信号将在后续机器状态机阶段接入。
+
+ORGANIZATION_BLOCK "Main"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+   "DB_UpperComputerCommunication"(
+      CommandDone := FALSE,
+      CommandStatus := 0);
+END_ORGANIZATION_BLOCK
