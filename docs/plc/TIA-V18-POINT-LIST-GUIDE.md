@@ -51,7 +51,9 @@
 - PLC 程序必须对命令位做上升沿检测，并在处理后自行保持安全状态；不得把上位机持续在线当作安全条件。
 - `Cmd_Stop` 是正常停机请求，不是急停。
 - `EStop` 和 `SafetyDoor` 只是 PLC 到上位机的状态镜像，安全动作必须由安全继电器或安全 PLC 完成。
-- `CommandSequence`、`CommandAckSequence`、心跳和协议版本已预留。当前 C# 驱动尚未启用完整请求/应答握手，完成 OB1/FB 通信逻辑后再启用，不能仅凭预留变量宣称握手已经完成。
+- `CommandSequence`、`CommandAckSequence`、心跳和协议版本已经纳入 V1 点表，但 PLC 侧 OB1/FB 处理逻辑仍未实现，不能仅凭变量存在宣称握手已经完成。
+
+当前 C# 驱动已实现协议版本检查，以及可配置的命令应答和心跳监控。`EnableCommandAcknowledgement` 与 `EnableHeartbeatMonitoring` 默认保持 `false`；只有 PLC 侧完成相应 FB/OB1 逻辑并通过 TIA 编译后才能启用，否则会按设计产生应答或心跳超时。
 
 ## 6. 点表如何导出和回传
 

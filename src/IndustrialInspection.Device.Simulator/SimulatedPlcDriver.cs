@@ -6,10 +6,15 @@ namespace IndustrialInspection.Device.Simulator;
 public sealed class SimulatedPlcDriver : IPlcDriver
 {
     private long _sequence;
+    private long _commandAttempts;
 
     public DeviceIdentity Identity { get; } = new("PLC-SIM", "模拟 PLC", "Simulator", "S7-1500");
     public DeviceConnectionState State { get; private set; } = DeviceConnectionState.Disconnected;
     public int FailEveryReads { get; set; }
+    public int FailEveryCommands { get; set; }
+    public TimeSpan CommandProcessingDelay { get; set; }
+    public short NextCommandStatusCode { get; set; }
+    public long CommandAttempts => Interlocked.Read(ref _commandAttempts);
     public IList<PlcCommandRequest> Commands { get; } = [];
 
     /// <summary>把模拟 PLC 切换到已连接状态。</summary>
@@ -45,12 +50,35 @@ public sealed class SimulatedPlcDriver : IPlcDriver
             0.5f, 120f, DateTimeOffset.UtcNow, sequence));
     }
 
-    /// <summary>记录模拟命令，供应用层和单元测试验证调用顺序。</summary>
-    public Task WriteCommandAsync(PlcCommandRequest request, CancellationToken cancellationToken)
+    /// <summary>模拟命令处理延时、业务拒绝和通讯失败，并记录成功执行的命令。</summary>
+    public async Task WriteCommandAsync(PlcCommandRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (State != DeviceConnectionState.Connected)
+        {
+            throw new InvalidOperationException("模拟 PLC 未连接。");
+        }
+
+        var attempt = Interlocked.Increment(ref _commandAttempts);
+        if (CommandProcessingDelay > TimeSpan.Zero)
+        {
+            await Task.Delay(CommandProcessingDelay, cancellationToken);
+        }
+
+        if (FailEveryCommands > 0 && attempt % FailEveryCommands == 0)
+        {
+            State = DeviceConnectionState.Faulted;
+            throw new IOException("模拟 PLC 命令写入网络中断。");
+        }
+
+        if (NextCommandStatusCode != 0)
+        {
+            var statusCode = NextCommandStatusCode;
+            NextCommandStatusCode = 0;
+            throw new PlcCommandRejectedException(checked((int)attempt), statusCode);
+        }
+
         Commands.Add(request);
-        return Task.CompletedTask;
     }
 
     /// <summary>模拟驱动没有非托管资源，因此直接完成释放。</summary>

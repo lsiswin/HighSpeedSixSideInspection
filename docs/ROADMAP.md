@@ -13,7 +13,7 @@
 | 顺序 | 模块 | 状态 | 当前成果 | 退出条件 |
 |---:|---|---|---|---|
 | 01 | Device Abstraction | 基础完成 | 统一身份、连接生命周期、操作结果；PLC/Camera/Motion/Robot 接口 | 新驱动不泄漏厂商 SDK；契约测试覆盖生命周期 |
-| 02 | PLC Driver | 进行中 | S7.NetPlus、批量读取、命令脉冲、重连、配置校验、DB100/DB101 V1 草案和 TIA SCL 源 | TIA 编译核对并冻结点表 V1；真实 S7-1511 8h/24h；断线和重启恢复 |
+| 02 | PLC Driver | 进行中 | S7.NetPlus、批量读取、命令脉冲、重连、V1 协议版本、可选命令应答/心跳、DB100/DB101 草案 | PLC 侧握手/心跳；TIA 编译核对并冻结 V1；真实 S7-1511 8h/24h；断线和重启恢复 |
 | 03 | Camera Driver | 等待 02 Gate | 相机抽象和模拟帧流已准备 | MVS SDK 接入；单相机 10 万帧；六相机丢帧指标 |
 | 04 | Motion Driver | 等待 03 | 运动抽象和位置比较计划已准备 | MotionRT7 接入；回零/运动/位置比较；1000 次重复定位 |
 | 05 | Device Simulator | 等待 04 | 已有四类基础模拟器 | 支持时序、断线、丢帧、轴故障、机器人故障脚本化注入 |
@@ -33,12 +33,13 @@
 
 ## 当前停点
 
-当前必须继续完成 02 PLC Driver。DB100/DB101 点表 V1 草案、TIA V18 SCL 外部源和创建指南已经生成；下一项是在 TIA 中生成数据块、核对实际偏移并连接真实 S7-1511。真实 PLC Gate 未完成前，不把 03 Camera Driver 标记为进行中。
+当前必须继续完成 02 PLC Driver。C# 已实现 DB100/DB101 V1 的协议版本检查、可选命令应答和心跳监控；TIA CLI Bridge 当前拒绝连接，下一项是在 TIA 中生成数据块、实现 PLC 侧握手/心跳、编译并核对实际偏移。真实 PLC Gate 未完成前，不把 03 Camera Driver 标记为进行中。
 
 ## 02 PLC Driver 下一批任务
 
 1. 在 TIA Portal V18 导入 SCL，确认 DB100_HMI、DB101_Machine 的块号、符号、偏移和数据类型后冻结 V1。
 2. 确认 S7-1511 固件、IP、Rack、Slot、优化访问及通讯权限。
-3. 在安全测试模式验证 Read/Write/命令脉冲和 RecipeChange 握手。
-4. 执行拔网线、PLC 重启、错误地址和恢复测试。
-5. 执行 8 小时 PoC，达标后再执行 24 小时 Gate。
+3. 创建 PLC 侧命令上升沿、流水号应答、业务状态码和心跳递增逻辑，并通过 `tia_compile`。
+4. 在安全测试模式验证 Read/Write/命令脉冲和 RecipeChange 握手。
+5. 执行拔网线、PLC 重启、错误地址、应答超时、心跳冻结和恢复测试。
+6. 执行 8 小时 PoC，达标后再执行 24 小时 Gate。

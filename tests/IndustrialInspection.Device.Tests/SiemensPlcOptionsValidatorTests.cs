@@ -33,4 +33,34 @@ public sealed class SiemensPlcOptionsValidatorTests
 
         Assert.Contains("脉冲", exception.Message, StringComparison.Ordinal);
     }
+
+    /// <summary>验证命令应答超时必须大于应答轮询周期。</summary>
+    [Fact]
+    public void Invalid_command_acknowledgement_timing_is_rejected()
+    {
+        var options = new SiemensPlcOptions
+        {
+            CommandAcknowledgementPollMilliseconds = 100,
+            CommandAcknowledgementTimeoutMilliseconds = 100
+        };
+
+        var exception = Assert.Throws<ArgumentException>(() => SiemensPlcOptionsValidator.Validate(options));
+
+        Assert.Contains("应答", exception.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>验证心跳超时时间必须显著大于心跳写入周期。</summary>
+    [Fact]
+    public void Unsafe_heartbeat_timing_is_rejected()
+    {
+        var options = new SiemensPlcOptions
+        {
+            HeartbeatWriteIntervalMilliseconds = 1_000,
+            HeartbeatTimeoutMilliseconds = 2_000
+        };
+
+        var exception = Assert.Throws<ArgumentException>(() => SiemensPlcOptionsValidator.Validate(options));
+
+        Assert.Contains("心跳", exception.Message, StringComparison.Ordinal);
+    }
 }

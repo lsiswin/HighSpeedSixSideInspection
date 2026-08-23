@@ -11,6 +11,14 @@ public sealed class SiemensPlcOptions
     public short Rack { get; init; }
     public short Slot { get; init; } = 1;
     public int CommandPulseMilliseconds { get; init; } = 100;
+    public bool EnableProtocolVersionCheck { get; init; } = true;
+    public ushort ProtocolVersion { get; init; } = 1;
+    public bool EnableCommandAcknowledgement { get; init; }
+    public int CommandAcknowledgementTimeoutMilliseconds { get; init; } = 2_000;
+    public int CommandAcknowledgementPollMilliseconds { get; init; } = 20;
+    public bool EnableHeartbeatMonitoring { get; init; }
+    public int HeartbeatWriteIntervalMilliseconds { get; init; } = 1_000;
+    public int HeartbeatTimeoutMilliseconds { get; init; } = 5_000;
     public SiemensPlcPointMap Points { get; init; } = new();
 }
 
@@ -34,6 +42,16 @@ public sealed class SiemensPlcPointMap
     public string Manual { get; init; } = "DB100.DBX0.4";
     public string RecipeChange { get; init; } = "DB100.DBX0.5";
     public string RecipeId { get; init; } = "DB100.DBD4";
+    public string CommandSequence { get; init; } = "DB100.DBD8";
+    public string PcHeartbeat { get; init; } = "DB100.DBD12";
+    public string ProtocolVersionToPlc { get; init; } = "DB100.DBW16";
+    public string PcReady { get; init; } = "DB100.DBX18.0";
+    public string CommandAckSequence { get; init; } = "DB101.DBD12";
+    public string PlcHeartbeat { get; init; } = "DB101.DBD24";
+    public string ProtocolVersionFromPlc { get; init; } = "DB101.DBW28";
+    public string CommandBusy { get; init; } = "DB101.DBX30.0";
+    public string CommandError { get; init; } = "DB101.DBX30.1";
+    public string LastCommandStatus { get; init; } = "DB101.DBW32";
 }
 
 /// <summary>在建立真实 PLC 连接前验证连接参数和点位映射。</summary>
@@ -58,6 +76,23 @@ public static class SiemensPlcOptionsValidator
         if (options.CommandPulseMilliseconds is < 20 or > 2_000)
         {
             throw new ArgumentException("PLC 命令脉冲宽度必须在 20～2000 ms 之间。", nameof(options));
+        }
+
+        if (options.ProtocolVersion == 0)
+        {
+            throw new ArgumentException("PLC 通信协议版本不能为 0。", nameof(options));
+        }
+
+        if (options.CommandAcknowledgementPollMilliseconds is < 5 or > 1_000 ||
+            options.CommandAcknowledgementTimeoutMilliseconds <= options.CommandAcknowledgementPollMilliseconds)
+        {
+            throw new ArgumentException("PLC 命令应答轮询周期或超时时间不合法。", nameof(options));
+        }
+
+        if (options.HeartbeatWriteIntervalMilliseconds is < 100 or > 60_000 ||
+            options.HeartbeatTimeoutMilliseconds <= options.HeartbeatWriteIntervalMilliseconds * 2)
+        {
+            throw new ArgumentException("PLC 心跳写入周期或超时时间不合法。", nameof(options));
         }
 
         var addresses = GetAddresses(options.Points).ToArray();
@@ -97,5 +132,15 @@ public static class SiemensPlcOptionsValidator
         yield return (nameof(points.Manual), points.Manual);
         yield return (nameof(points.RecipeChange), points.RecipeChange);
         yield return (nameof(points.RecipeId), points.RecipeId);
+        yield return (nameof(points.CommandSequence), points.CommandSequence);
+        yield return (nameof(points.PcHeartbeat), points.PcHeartbeat);
+        yield return (nameof(points.ProtocolVersionToPlc), points.ProtocolVersionToPlc);
+        yield return (nameof(points.PcReady), points.PcReady);
+        yield return (nameof(points.CommandAckSequence), points.CommandAckSequence);
+        yield return (nameof(points.PlcHeartbeat), points.PlcHeartbeat);
+        yield return (nameof(points.ProtocolVersionFromPlc), points.ProtocolVersionFromPlc);
+        yield return (nameof(points.CommandBusy), points.CommandBusy);
+        yield return (nameof(points.CommandError), points.CommandError);
+        yield return (nameof(points.LastCommandStatus), points.LastCommandStatus);
     }
 }

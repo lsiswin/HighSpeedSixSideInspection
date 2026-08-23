@@ -21,6 +21,14 @@ public sealed record PlcDriverHealth(
     long Reconnects,
     string? LastError);
 
+/// <summary>表示 PLC 通讯正常，但因设备互锁或业务条件拒绝执行命令。</summary>
+public sealed class PlcCommandRejectedException(int sequence, short statusCode)
+    : InvalidOperationException($"PLC 拒绝命令，流水号={sequence}，状态码={statusCode}。")
+{
+    public int Sequence { get; } = sequence;
+    public short StatusCode { get; } = statusCode;
+}
+
 /// <summary>定义 PLC 状态读取和受控命令写入能力。</summary>
 public interface IPlcDriver : IDeviceDriver
 {
